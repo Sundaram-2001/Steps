@@ -1,9 +1,30 @@
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { signInWithGoogle } from '../auth/googleSignIn';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 
 export default function Welcome() {
+  const [isSigningIn, setIsSigningIn] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const signingIn = useRef(false);
+
+  async function handleSignIn() {
+    if (signingIn.current) return;
+    signingIn.current = true;
+    setIsSigningIn(true);
+    setErrorMessage('');
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Sign-in failed. Please try again.');
+    } finally {
+      signingIn.current = false;
+      setIsSigningIn(false);
+    }
+  }
+
   return (
     <SafeAreaView style={styles.screen}>
       <StatusBar style="dark" />
@@ -26,7 +47,9 @@ export default function Welcome() {
 
           <Pressable
             accessibilityRole="button"
-            onPress={() => Alert.alert('Google sign-in', 'Sign-in setup is still in progress.')}
+            onPress={handleSignIn}
+            disabled={isSigningIn}
+            accessibilityState={{ disabled: isSigningIn, busy: isSigningIn }}
             style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
           >
             <Image
@@ -34,8 +57,14 @@ export default function Welcome() {
               style={styles.googleLogo}
               accessible={false}
             />
-            <Text style={styles.buttonLabel}>Continue with Google</Text>
+            {isSigningIn && <ActivityIndicator size="small" color="#FFFFFF" />}
+            <Text style={styles.buttonLabel}>
+              {isSigningIn ? 'Signing in…' : 'Continue with Google'}
+            </Text>
           </Pressable>
+          {!!errorMessage && (
+            <Text accessibilityRole="alert" style={styles.error}>{errorMessage}</Text>
+          )}
           <Text style={styles.note}>
             Why just Google? We went for a walk instead of building a password reset screen.
           </Text>
@@ -80,5 +109,6 @@ const styles = StyleSheet.create({
   buttonPressed: { backgroundColor: '#1A412F' },
   googleLogo: { width: 20, height: 20 },
   buttonLabel: { fontSize: 16, fontWeight: '600', color: '#FFFFFF', textAlign: 'center', flexShrink: 1 },
+  error: { marginTop: 14, color: '#A32626', fontSize: 14, lineHeight: 21 },
   note: { marginTop: 14, fontSize: 14, lineHeight: 21, color: '#4C5C51', textAlign: 'center' },
 });
