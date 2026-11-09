@@ -1,4 +1,6 @@
+
 import { DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+
 
 const theme = {
   ...DefaultTheme,

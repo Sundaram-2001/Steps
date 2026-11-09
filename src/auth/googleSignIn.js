@@ -11,7 +11,7 @@ export async function signInWithGoogle() {
     throw new Error('Add the Supabase URL, publishable key, and Google web client ID to .env, then restart the development server.');
   }
 
-  // Load the native module only on Android and when sign-in is requested.
+  
   const { GoogleSignin, isSuccessResponse } = await import(
     '@react-native-google-signin/google-signin'
   );
